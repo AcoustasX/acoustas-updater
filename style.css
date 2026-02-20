@@ -639,6 +639,13 @@ body {
   flex-shrink: 0;
 }
 
+.post-step-highlight {
+  background: var(--brand-glow);
+  border: 1px solid var(--brand-dark);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
 .success-note {
   font-size: 13px;
   color: var(--brand);

@@ -86,7 +86,7 @@
             <div>
               <strong>Connect main power</strong><br>
               <span class="prep-detail">Make sure the amplifier's main power cord is plugged in. The amp does not need
-                to be turned on — just connected to power.</span>
+                to be turned on, just connected to power.</span>
             </div>
           </div>
         </div>
@@ -152,7 +152,7 @@
           Connect Your Amplifier
         </h2>
         <p class="step-description">
-          Click the Connect button below. A popup will appear — select <strong>"USB JTAG/serial debug unit"</strong> and
+          Click the Connect button below. A popup will appear. Select <strong>"USB JTAG/serial debug unit"</strong> and
           click Connect.
         </p>
         <div class="connect-row">
@@ -180,19 +180,19 @@
           <div class="flash-info">
             <div class="flash-info-row">
               <span class="flash-info-label">Amplifier:</span>
-              <span id="flashAmpName" class="flash-info-value">—</span>
+              <span id="flashAmpName" class="flash-info-value">-</span>
             </div>
             <div class="flash-info-row">
               <span class="flash-info-label">Config:</span>
-              <span id="flashConfigValue" class="flash-info-value">—</span>
+              <span id="flashConfigValue" class="flash-info-value">-</span>
             </div>
             <div class="flash-info-row hidden" id="flashSerialRow">
               <span class="flash-info-label">Serial:</span>
-              <span id="flashSerialValue" class="flash-info-value">—</span>
+              <span id="flashSerialValue" class="flash-info-value">-</span>
             </div>
             <div class="flash-info-row">
               <span class="flash-info-label">Firmware:</span>
-              <span class="flash-info-value">v1.5.9</span>
+              <span class="flash-info-value">v1.6.0</span>
             </div>
           </div>
           <div class="erase-option">
@@ -201,8 +201,9 @@
               <span class="checkbox-custom"></span>
               <span>Full Erase (reset all settings)</span>
             </label>
-            <p class="erase-hint">Leave unchecked to preserve Wi-Fi and provisioning data. Only check this if you are
-              experiencing issues.</p>
+            <p class="erase-hint">Leave unchecked to preserve Wi-Fi, provisioning data, and audio profile. Only check
+              this if you are experiencing issues. You will need to reconnect Wi-Fi and reprogram the audio
+              profile via the Acoustas app.</p>
           </div>
           <button id="flashBtn" class="btn btn-accent btn-large" disabled>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -248,9 +249,18 @@
               <span class="post-step-num">4</span>
               <span>Plug the power cord back in and turn on your amplifier</span>
             </div>
+            <div id="postStepApp" class="post-step post-step-highlight hidden">
+              <span class="post-step-num">5</span>
+              <span>Open the <strong>Acoustas app</strong> on your phone and connect to the amplifier. It will
+                automatically load the FIR audio profile.</span>
+            </div>
           </div>
-          <p class="success-note">Your Wi-Fi settings have been preserved — the amplifier should reconnect
+          <p id="successNotePreserved" class="success-note">Your Wi-Fi settings have been preserved. The amplifier
+            should reconnect
             automatically.</p>
+          <p id="successNoteErased" class="success-note hidden">Since you performed a full erase, you will need to
+            re-provision
+            Wi-Fi and the audio profile will be loaded automatically when you connect via the Acoustas app.</p>
           <button id="resetBtn" class="btn btn-secondary">Flash Another</button>
         </div>
 

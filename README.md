@@ -23,9 +23,9 @@ After the one-time USB update, all future updates can be done through the app.
 
 | Item | Value |
 |---|---|
-| **Firmware version** | `1.5.9` |
-| **Firmware binary** | `firmware/AC650.bin` (1,045,408 bytes) |
-| **Source binary** | `AC650_20260219_v1.5.9.bin` |
+| **Firmware version** | `1.6.0` |
+| **Firmware binary** | `firmware/AC650.bin` (1,228,784 bytes) |
+| **Source binary** | `AC650_20260220_v1.6.0.bin` |
 | **Target chip** | ESP32-S3 |
 | **Flash size** | 4 MB |
 | **Baud rate** | 921,600 |
@@ -181,7 +181,7 @@ AcoustasUpdater/
 ├── CNAME                   # Custom domain config
 ├── .nojekyll               # Bypass Jekyll processing
 ├── firmware/
-│   ├── AC650.bin           # Main firmware (v1.5.9)
+│   ├── AC650.bin           # Main firmware (v1.6.0)
 │   ├── bootloader.bin      # ESP32-S3 bootloader
 │   ├── partition-table.bin # Flash partition layout
 │   └── ota_data_initial.bin # OTA boot selector

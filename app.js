@@ -7,13 +7,13 @@
  * Partition layout (ESP32-S3, 4MB flash):
  *   0x00000  bootloader.bin
  *   0x0A000  partition-table.bin
- *   0x0B000  storage (4KB) — serial (4 bytes) + config (4 bytes)
+ *   0x0B000  storage (4KB) - serial (4 bytes) + config (4 bytes)
  *   0x0C000  ota_data_initial.bin
  *   0x80000  AC650.bin (firmware)
  */
 
 // ─── Configuration ───────────────────────────────────────────────
-const FIRMWARE_VERSION = '1.5.9';
+const FIRMWARE_VERSION = '1.6.0';
 const ADMIN_PASSWORD = 'Acoustas2026!';  // Change this to your desired password
 const BAUD_RATE = 921600;
 
@@ -71,6 +71,9 @@ const progressPercent = document.getElementById('progressPercent');
 const successSection = document.getElementById('successSection');
 const errorSection = document.getElementById('errorSection');
 const errorMessage = document.getElementById('errorMessage');
+const postStepApp = document.getElementById('postStepApp');
+const successNotePreserved = document.getElementById('successNotePreserved');
+const successNoteErased = document.getElementById('successNoteErased');
 const logPanel = document.getElementById('logPanel');
 const logOutput = document.getElementById('logOutput');
 const logToggle = document.getElementById('logToggle');
@@ -245,7 +248,7 @@ flashBtn.addEventListener('click', async () => {
 
         if (fullErase) {
             // Full erase mode: load all binaries
-            log('Mode: FULL ERASE — all settings will be reset');
+            log('Mode: FULL ERASE - all settings will be reset');
             const [bootloaderData, partTableData, otaDataData, firmwareData] = await Promise.all([
                 fetchBinary(FIRMWARE_FILES.bootloader),
                 fetchBinary(FIRMWARE_FILES.partitionTable),
@@ -270,7 +273,7 @@ flashBtn.addEventListener('click', async () => {
                 await espTool.eraseFlash();
                 log('Flash erased');
             } catch (e) {
-                log(`Erase warning: ${e.message} — continuing...`);
+                log(`Erase warning: ${e.message} - continuing...`);
             }
             setProgress(25, 'Writing firmware...');
 
@@ -306,7 +309,7 @@ flashBtn.addEventListener('click', async () => {
         } else {
             // Targeted mode: write all partitions WITHOUT erasing full flash
             // This preserves NVS (Wi-Fi credentials, provisioning data)
-            log('Mode: TARGETED UPDATE — preserving Wi-Fi and provisioning data');
+            log('Mode: TARGETED UPDATE - preserving Wi-Fi and provisioning data');
             const [bootloaderData, partTableData, otaDataData, firmwareData] = await Promise.all([
                 fetchBinary(FIRMWARE_FILES.bootloader),
                 fetchBinary(FIRMWARE_FILES.partitionTable),
@@ -369,9 +372,19 @@ flashBtn.addEventListener('click', async () => {
 
         setProgress(100, 'Complete!');
 
-        // Show success
+        // Show success with conditional content based on erase mode
         setTimeout(() => {
             progressSection.classList.add('hidden');
+            const didFullErase = fullEraseCheck.checked;
+            if (didFullErase) {
+                postStepApp.classList.remove('hidden');
+                successNotePreserved.classList.add('hidden');
+                successNoteErased.classList.remove('hidden');
+            } else {
+                postStepApp.classList.add('hidden');
+                successNotePreserved.classList.remove('hidden');
+                successNoteErased.classList.add('hidden');
+            }
             successSection.classList.remove('hidden');
         }, 500);
 
@@ -414,6 +427,10 @@ function resetAll() {
     progressSection.classList.add('hidden');
     successSection.classList.add('hidden');
     errorSection.classList.add('hidden');
+    // Reset conditional success elements:
+    postStepApp.classList.add('hidden');
+    successNotePreserved.classList.remove('hidden');
+    successNoteErased.classList.add('hidden');
     updateUI();
 }
 
@@ -501,8 +518,8 @@ function updateUI() {
         flashAmpName.textContent = selectedName;
         flashConfigValue.textContent = selectedConfig.toString();
     } else {
-        flashAmpName.textContent = '—';
-        flashConfigValue.textContent = '—';
+        flashAmpName.textContent = '-';
+        flashConfigValue.textContent = '-';
     }
 
     // Serial info
@@ -531,5 +548,5 @@ if (!('serial' in navigator)) {
 
 // Init
 log(`Acoustas AC650 Firmware Updater v${FIRMWARE_VERSION}`);
-log('Ready — select your amplifier to begin.');
+log('Ready - select your amplifier to begin.');
 updateUI();
