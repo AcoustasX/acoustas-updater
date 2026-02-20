@@ -507,6 +507,44 @@ body {
   margin-bottom: 20px;
 }
 
+.post-flash-steps {
+  text-align: left;
+  max-width: 400px;
+  margin: 0 auto 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.post-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.post-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #000;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.success-note {
+  font-size: 13px;
+  color: var(--brand);
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
 /* Error */
 .error-section {
   text-align: center;
