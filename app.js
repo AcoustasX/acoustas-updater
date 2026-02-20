@@ -230,6 +230,8 @@ connectBtn.addEventListener('click', async () => {
 flashBtn.addEventListener('click', async () => {
     if (!espTool || !isConnected || selectedConfig === null) return;
 
+    const fullErase = document.getElementById('fullEraseCheck').checked;
+
     // Hide flash content, show progress
     flashContent.classList.add('hidden');
     progressSection.classList.remove('hidden');
@@ -237,71 +239,117 @@ flashBtn.addEventListener('click', async () => {
     errorSection.classList.add('hidden');
 
     try {
-        // 1. Load all firmware files
+        // 1. Load firmware files
         setProgress(0, 'Loading firmware files...');
         log('Loading firmware binaries...');
 
-        const [bootloaderData, partTableData, otaDataData, firmwareData] = await Promise.all([
-            fetchBinary(FIRMWARE_FILES.bootloader),
-            fetchBinary(FIRMWARE_FILES.partitionTable),
-            fetchBinary(FIRMWARE_FILES.otaData),
-            fetchBinary(FIRMWARE_FILES.firmware),
-        ]);
+        if (fullErase) {
+            // Full erase mode: load all binaries
+            log('Mode: FULL ERASE — all settings will be reset');
+            const [bootloaderData, partTableData, otaDataData, firmwareData] = await Promise.all([
+                fetchBinary(FIRMWARE_FILES.bootloader),
+                fetchBinary(FIRMWARE_FILES.partitionTable),
+                fetchBinary(FIRMWARE_FILES.otaData),
+                fetchBinary(FIRMWARE_FILES.firmware),
+            ]);
 
-        log(`Loaded: bootloader=${bootloaderData.length}B, partTable=${partTableData.length}B, otaData=${otaDataData.length}B, firmware=${firmwareData.length}B`);
-        setProgress(10, 'Preparing storage partition...');
+            log(`Loaded: bootloader=${bootloaderData.length}B, partTable=${partTableData.length}B, otaData=${otaDataData.length}B, firmware=${firmwareData.length}B`);
+            setProgress(10, 'Preparing storage partition...');
 
-        // 2. Generate storage partition data (4KB)
-        const storageData = generateStoragePartition(
-            isAdmin ? (parseInt(serialInput.value, 10) || 0) : 0,
-            selectedConfig
-        );
-        log(`Storage partition: serial=${isAdmin ? serialInput.value : '0'}, config=${selectedConfig}`);
+            // Generate storage partition
+            const storageData = generateStoragePartition(
+                isAdmin ? (parseInt(serialInput.value, 10) || 0) : 0,
+                selectedConfig
+            );
+            log(`Storage partition: serial=${isAdmin ? serialInput.value : '0'}, config=${selectedConfig}`);
 
-        // 3. Erase flash
-        setProgress(15, 'Erasing flash...');
-        log('Erasing flash...');
-        try {
-            await espTool.eraseFlash();
-            log('Flash erased');
-        } catch (e) {
-            log(`Erase warning: ${e.message} — continuing with write...`);
+            // Erase entire flash
+            setProgress(15, 'Erasing flash (full)...');
+            log('Erasing entire flash...');
+            try {
+                await espTool.eraseFlash();
+                log('Flash erased');
+            } catch (e) {
+                log(`Erase warning: ${e.message} — continuing...`);
+            }
+            setProgress(25, 'Writing firmware...');
+
+            // Write all partitions
+            const fileArray = [
+                { data: binaryToEspFormat(bootloaderData), address: FLASH_OFFSETS.bootloader },
+                { data: binaryToEspFormat(partTableData), address: FLASH_OFFSETS.partitionTable },
+                { data: binaryToEspFormat(storageData), address: FLASH_OFFSETS.storage },
+                { data: binaryToEspFormat(otaDataData), address: FLASH_OFFSETS.otaData },
+                { data: binaryToEspFormat(firmwareData), address: FLASH_OFFSETS.firmware },
+            ];
+
+            log('Writing all partitions to flash...');
+            await espTool.writeFlash({
+                fileArray,
+                flashSize: '4MB',
+                flashMode: 'dio',
+                flashFreq: '80m',
+                eraseAll: false,
+                compress: true,
+                reportProgress: (fileIndex, written, total) => {
+                    const labels = ['Bootloader', 'Partition Table', 'Storage', 'OTA Data', 'Firmware'];
+                    const baseProgress = 25;
+                    const perFileWeight = [5, 2, 1, 2, 60];
+                    let cumWeight = 0;
+                    for (let i = 0; i < fileIndex; i++) cumWeight += perFileWeight[i];
+                    const fileProgress = (written / total) * perFileWeight[fileIndex];
+                    const totalProgress = Math.min(95, baseProgress + cumWeight + fileProgress);
+                    setProgress(totalProgress, `Writing ${labels[fileIndex]}...`);
+                },
+            });
+
+        } else {
+            // Targeted mode: write only firmware + storage (preserves NVS/WiFi)
+            log('Mode: TARGETED UPDATE — preserving Wi-Fi and provisioning data');
+            const firmwareData = await fetchBinary(FIRMWARE_FILES.firmware);
+            log(`Loaded: firmware=${firmwareData.length}B`);
+            setProgress(10, 'Preparing storage partition...');
+
+            // Generate storage partition
+            const storageData = generateStoragePartition(
+                isAdmin ? (parseInt(serialInput.value, 10) || 0) : 0,
+                selectedConfig
+            );
+            log(`Storage partition: serial=${isAdmin ? serialInput.value : '0'}, config=${selectedConfig}`);
+
+            setProgress(20, 'Writing firmware...');
+
+            // Write only storage + firmware (no erase)
+            const fileArray = [
+                { data: binaryToEspFormat(storageData), address: FLASH_OFFSETS.storage },
+                { data: binaryToEspFormat(firmwareData), address: FLASH_OFFSETS.firmware },
+            ];
+
+            log('Writing firmware and storage partitions...');
+            await espTool.writeFlash({
+                fileArray,
+                flashSize: '4MB',
+                flashMode: 'dio',
+                flashFreq: '80m',
+                eraseAll: false,
+                compress: true,
+                reportProgress: (fileIndex, written, total) => {
+                    const labels = ['Storage', 'Firmware'];
+                    const baseProgress = 20;
+                    const perFileWeight = [2, 73];
+                    let cumWeight = 0;
+                    for (let i = 0; i < fileIndex; i++) cumWeight += perFileWeight[i];
+                    const fileProgress = (written / total) * perFileWeight[fileIndex];
+                    const totalProgress = Math.min(95, baseProgress + cumWeight + fileProgress);
+                    setProgress(totalProgress, `Writing ${labels[fileIndex]}...`);
+                },
+            });
         }
-        setProgress(25, 'Writing firmware...');
-
-        // 4. Write all partitions
-        const fileArray = [
-            { data: binaryToEspFormat(bootloaderData), address: FLASH_OFFSETS.bootloader },
-            { data: binaryToEspFormat(partTableData), address: FLASH_OFFSETS.partitionTable },
-            { data: binaryToEspFormat(storageData), address: FLASH_OFFSETS.storage },
-            { data: binaryToEspFormat(otaDataData), address: FLASH_OFFSETS.otaData },
-            { data: binaryToEspFormat(firmwareData), address: FLASH_OFFSETS.firmware },
-        ];
-
-        log('Writing partitions to flash...');
-        await espTool.writeFlash({
-            fileArray,
-            flashSize: '4MB',
-            flashMode: 'dio',
-            flashFreq: '80m',
-            eraseAll: false,
-            compress: true,
-            reportProgress: (fileIndex, written, total) => {
-                const labels = ['Bootloader', 'Partition Table', 'Storage', 'OTA Data', 'Firmware'];
-                const baseProgress = 25;
-                const perFileWeight = [5, 2, 1, 2, 60]; // Firmware is the big one
-                let cumWeight = 0;
-                for (let i = 0; i < fileIndex; i++) cumWeight += perFileWeight[i];
-                const fileProgress = (written / total) * perFileWeight[fileIndex];
-                const totalProgress = Math.min(95, baseProgress + cumWeight + fileProgress);
-                setProgress(totalProgress, `Writing ${labels[fileIndex]}...`);
-            },
-        });
 
         log('All partitions written successfully');
         setProgress(95, 'Resetting device...');
 
-        // 5. Hard reset
+        // Hard reset
         try {
             await espTool.hardReset();
             log('Device reset');

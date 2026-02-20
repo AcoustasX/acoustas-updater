@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
   <div class="app">
     <!-- Header -->
@@ -19,8 +21,8 @@
       </div>
       <button id="adminToggle" class="admin-toggle" title="Admin Login">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
         </svg>
       </button>
     </header>
@@ -94,13 +96,14 @@
         </h2>
         <p class="step-description">
           Plug in your AC650 via USB, then click Connect.
-          <br><small class="hint">Make sure the amplifier is powered off, then hold the BOOT button while plugging in the USB cable.</small>
+          <br><small class="hint">Make sure the amplifier is powered off, then hold the BOOT button while plugging in
+            the USB cable.</small>
         </p>
         <div class="connect-row">
           <button id="connectBtn" class="btn btn-primary btn-large" disabled>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2v6m0 0l3-3m-3 3L9 5"/>
-              <rect x="6" y="8" width="12" height="12" rx="2"/>
+              <path d="M12 2v6m0 0l3-3m-3 3L9 5" />
+              <rect x="6" y="8" width="12" height="12" rx="2" />
             </svg>
             Connect via USB
           </button>
@@ -136,9 +139,18 @@
               <span class="flash-info-value">v1.5.9</span>
             </div>
           </div>
+          <div class="erase-option">
+            <label class="checkbox-label">
+              <input type="checkbox" id="fullEraseCheck">
+              <span class="checkbox-custom"></span>
+              <span>Full Erase (reset all settings)</span>
+            </label>
+            <p class="erase-hint">Leave unchecked to preserve Wi-Fi and provisioning data. Only check this if you are
+              experiencing issues.</p>
+          </div>
           <button id="flashBtn" class="btn btn-accent btn-large" disabled>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
             </svg>
             Flash Firmware
           </button>
@@ -195,4 +207,5 @@
 
   <script type="module" src="app.js"></script>
 </body>
+
 </html>
