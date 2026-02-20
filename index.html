@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acoustas AC650 Firmware Updater</title>
+  <meta name="description" content="Update your Acoustas AC650 amplifier firmware via USB">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-brand">
+        <h1 class="logo">ACOUSTAS</h1>
+        <span class="logo-sub">AC650 Firmware Updater</span>
+      </div>
+      <button id="adminToggle" class="admin-toggle" title="Admin Login">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Admin Password Modal -->
+    <div id="adminModal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content">
+        <h2>Admin Access</h2>
+        <p>Enter admin password to unlock serial number configuration.</p>
+        <input type="password" id="adminPassword" class="input-field" placeholder="Password" autocomplete="off">
+        <div class="modal-actions">
+          <button id="adminCancel" class="btn btn-secondary">Cancel</button>
+          <button id="adminSubmit" class="btn btn-primary">Unlock</button>
+        </div>
+        <p id="adminError" class="error-text hidden">Incorrect password</p>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <main class="main">
+      <!-- Step 1: Select your amplifier -->
+      <section class="step" id="stepSelect">
+        <h2 class="step-title">
+          <span class="step-number">1</span>
+          Select Your Amplifier
+        </h2>
+        <p class="step-description">Click the image that matches your AC650 amplifier.</p>
+
+        <div class="amp-grid">
+          <button class="amp-card" data-config="0" data-name="AC650 Black (Original)">
+            <div class="amp-image-wrap">
+              <img src="images/acoustas_ac650_black.png" alt="AC650 Black Original" class="amp-image">
+            </div>
+            <div class="amp-label">AC650 Black</div>
+            <div class="amp-sublabel">Original</div>
+            <div class="amp-check">✓</div>
+          </button>
+
+          <button class="amp-card" data-config="2" data-name="AC650 White">
+            <div class="amp-image-wrap">
+              <img src="images/acoustas_ac650_white.png" alt="AC650 White" class="amp-image">
+            </div>
+            <div class="amp-label">AC650 White</div>
+            <div class="amp-sublabel">Original</div>
+            <div class="amp-check">✓</div>
+          </button>
+
+          <button class="amp-card" data-config="3" data-name="AC650 Black v2">
+            <div class="amp-image-wrap">
+              <img src="images/acoustas_ac650_black2.png" alt="AC650 Black v2" class="amp-image">
+            </div>
+            <div class="amp-label">AC650 Black</div>
+            <div class="amp-sublabel">Version 2</div>
+            <div class="amp-check">✓</div>
+          </button>
+        </div>
+
+        <!-- Admin serial number field -->
+        <div id="serialSection" class="serial-section hidden">
+          <label for="serialInput" class="serial-label">Serial Number (Admin)</label>
+          <input type="number" id="serialInput" class="input-field" placeholder="Enter serial number" min="0">
+        </div>
+      </section>
+
+      <!-- Step 2: Connect -->
+      <section class="step" id="stepConnect">
+        <h2 class="step-title">
+          <span class="step-number">2</span>
+          Connect Your Amplifier
+        </h2>
+        <p class="step-description">
+          Plug in your AC650 via USB, then click Connect.
+          <br><small class="hint">Make sure the amplifier is powered off, then hold the BOOT button while plugging in the USB cable.</small>
+        </p>
+        <div class="connect-row">
+          <button id="connectBtn" class="btn btn-primary btn-large" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v6m0 0l3-3m-3 3L9 5"/>
+              <rect x="6" y="8" width="12" height="12" rx="2"/>
+            </svg>
+            Connect via USB
+          </button>
+          <div id="connectionStatus" class="connection-status">
+            <span class="status-dot"></span>
+            <span class="status-text">Not connected</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 3: Flash -->
+      <section class="step" id="stepFlash">
+        <h2 class="step-title">
+          <span class="step-number">3</span>
+          Update Firmware
+        </h2>
+        <div id="flashContent">
+          <div class="flash-info">
+            <div class="flash-info-row">
+              <span class="flash-info-label">Amplifier:</span>
+              <span id="flashAmpName" class="flash-info-value">—</span>
+            </div>
+            <div class="flash-info-row">
+              <span class="flash-info-label">Config:</span>
+              <span id="flashConfigValue" class="flash-info-value">—</span>
+            </div>
+            <div class="flash-info-row hidden" id="flashSerialRow">
+              <span class="flash-info-label">Serial:</span>
+              <span id="flashSerialValue" class="flash-info-value">—</span>
+            </div>
+            <div class="flash-info-row">
+              <span class="flash-info-label">Firmware:</span>
+              <span class="flash-info-value">v1.5.9</span>
+            </div>
+          </div>
+          <button id="flashBtn" class="btn btn-accent btn-large" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            Flash Firmware
+          </button>
+        </div>
+
+        <!-- Progress -->
+        <div id="progressSection" class="progress-section hidden">
+          <div class="progress-bar-wrap">
+            <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+          </div>
+          <div class="progress-text">
+            <span id="progressLabel">Preparing...</span>
+            <span id="progressPercent">0%</span>
+          </div>
+        </div>
+
+        <!-- Success -->
+        <div id="successSection" class="success-section hidden">
+          <div class="success-icon">✓</div>
+          <h3 class="success-title">Update Complete!</h3>
+          <p class="success-text">
+            Your AC650 has been updated successfully.
+            <br>Disconnect the USB cable and power on your amplifier.
+          </p>
+          <button id="resetBtn" class="btn btn-secondary">Flash Another</button>
+        </div>
+
+        <!-- Error -->
+        <div id="errorSection" class="error-section hidden">
+          <div class="error-icon">✕</div>
+          <h3 class="error-title">Update Failed</h3>
+          <p id="errorMessage" class="error-text"></p>
+          <button id="retryBtn" class="btn btn-secondary">Try Again</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Requires Google Chrome or Microsoft Edge. &nbsp;|&nbsp; USB cable required.</p>
+      <p class="footer-copy">© 2026 Acoustas. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <!-- Console log panel -->
+  <div id="logPanel" class="log-panel hidden">
+    <div class="log-header">
+      <span>Console</span>
+      <button id="logClose" class="log-close">✕</button>
+    </div>
+    <pre id="logOutput" class="log-output"></pre>
+  </div>
+  <button id="logToggle" class="log-toggle" title="Toggle console log">⌥</button>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
