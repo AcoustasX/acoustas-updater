@@ -304,10 +304,13 @@ flashBtn.addEventListener('click', async () => {
             });
 
         } else {
-            // Targeted mode: write only firmware + storage (preserves NVS/WiFi)
+            // Targeted mode: write firmware + storage + OTA data (preserves NVS/WiFi)
             log('Mode: TARGETED UPDATE — preserving Wi-Fi and provisioning data');
-            const firmwareData = await fetchBinary(FIRMWARE_FILES.firmware);
-            log(`Loaded: firmware=${firmwareData.length}B`);
+            const [otaDataData, firmwareData] = await Promise.all([
+                fetchBinary(FIRMWARE_FILES.otaData),
+                fetchBinary(FIRMWARE_FILES.firmware),
+            ]);
+            log(`Loaded: otaData=${otaDataData.length}B, firmware=${firmwareData.length}B`);
             setProgress(10, 'Preparing storage partition...');
 
             // Generate storage partition
@@ -319,13 +322,14 @@ flashBtn.addEventListener('click', async () => {
 
             setProgress(20, 'Writing firmware...');
 
-            // Write only storage + firmware (no erase)
+            // Write storage + OTA data + firmware (no full erase)
             const fileArray = [
                 { data: binaryToEspFormat(storageData), address: FLASH_OFFSETS.storage },
+                { data: binaryToEspFormat(otaDataData), address: FLASH_OFFSETS.otaData },
                 { data: binaryToEspFormat(firmwareData), address: FLASH_OFFSETS.firmware },
             ];
 
-            log('Writing firmware and storage partitions...');
+            log('Writing firmware, OTA data, and storage partitions...');
             await espTool.writeFlash({
                 fileArray,
                 flashSize: '4MB',
@@ -334,9 +338,9 @@ flashBtn.addEventListener('click', async () => {
                 eraseAll: false,
                 compress: true,
                 reportProgress: (fileIndex, written, total) => {
-                    const labels = ['Storage', 'Firmware'];
+                    const labels = ['Storage', 'OTA Data', 'Firmware'];
                     const baseProgress = 20;
-                    const perFileWeight = [2, 73];
+                    const perFileWeight = [2, 1, 72];
                     let cumWeight = 0;
                     for (let i = 0; i < fileIndex; i++) cumWeight += perFileWeight[i];
                     const fileProgress = (written / total) * perFileWeight[fileIndex];
