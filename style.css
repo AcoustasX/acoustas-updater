@@ -158,6 +158,107 @@ body {
   font-size: 12px;
 }
 
+/* Before You Begin - Prep Section */
+.prep-section {
+  border-color: var(--brand-dark);
+}
+
+.prep-icon {
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.prep-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.prep-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.prep-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  color: var(--brand);
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.prep-step strong {
+  color: var(--text-primary);
+}
+
+.prep-detail {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.video-placeholder {
+  text-align: center;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-card);
+  border-radius: var(--radius-sm);
+}
+
+.video-thumb {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--text-secondary);
+  transition: color var(--transition);
+}
+
+.video-thumb:hover {
+  color: var(--brand);
+}
+
+.video-play {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #000;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition);
+}
+
+.video-thumb:hover .video-play {
+  transform: scale(1.1);
+}
+
+.video-label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.video-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
 /* Amp Selection Grid */
 .amp-grid {
   display: grid;
