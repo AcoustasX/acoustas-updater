@@ -548,11 +548,13 @@ if (!('serial' in navigator)) {
 
 // Init
 async function loadFirmwareVersion() {
+    let buildTime = '';
     try {
         const resp = await fetch('firmware/version.json');
         if (resp.ok) {
             const data = await resp.json();
             FIRMWARE_VERSION = data.version || 'unknown';
+            buildTime = data.buildTime || '';
         }
     } catch (e) {
         console.warn('Could not load version.json:', e);
@@ -560,7 +562,19 @@ async function loadFirmwareVersion() {
     }
     // Update the firmware version display in the flash info section
     const versionEl = document.getElementById('flashFirmwareVersion');
-    if (versionEl) versionEl.textContent = `v${FIRMWARE_VERSION}`;
+    if (versionEl) {
+        let display = `v${FIRMWARE_VERSION}`;
+        if (buildTime) {
+            const d = new Date(buildTime);
+            const timeStr = d.toLocaleString('en-US', {
+                month: 'short', day: 'numeric',
+                hour: 'numeric', minute: '2-digit',
+                hour12: true
+            });
+            display += ` (built ${timeStr})`;
+        }
+        versionEl.textContent = display;
+    }
     log(`Acoustas AC650 Firmware Updater v${FIRMWARE_VERSION}`);
     log('Ready - select your amplifier to begin.');
 }
