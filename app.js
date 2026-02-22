@@ -13,7 +13,7 @@
  */
 
 // ─── Configuration ───────────────────────────────────────────────
-const FIRMWARE_VERSION = '1.6.2';
+let FIRMWARE_VERSION = 'loading...';
 const ADMIN_PASSWORD = 'Acoustas2026!';  // Change this to your desired password
 const BAUD_RATE = 921600;
 
@@ -547,6 +547,23 @@ if (!('serial' in navigator)) {
 }
 
 // Init
-log(`Acoustas AC650 Firmware Updater v${FIRMWARE_VERSION}`);
-log('Ready - select your amplifier to begin.');
+async function loadFirmwareVersion() {
+    try {
+        const resp = await fetch('firmware/version.json');
+        if (resp.ok) {
+            const data = await resp.json();
+            FIRMWARE_VERSION = data.version || 'unknown';
+        }
+    } catch (e) {
+        console.warn('Could not load version.json:', e);
+        FIRMWARE_VERSION = 'unknown';
+    }
+    // Update the firmware version display in the flash info section
+    const versionEl = document.getElementById('flashFirmwareVersion');
+    if (versionEl) versionEl.textContent = `v${FIRMWARE_VERSION}`;
+    log(`Acoustas AC650 Firmware Updater v${FIRMWARE_VERSION}`);
+    log('Ready - select your amplifier to begin.');
+}
+
+loadFirmwareVersion();
 updateUI();
