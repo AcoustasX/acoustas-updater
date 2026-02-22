@@ -13,7 +13,7 @@
  */
 
 // ─── Configuration ───────────────────────────────────────────────
-const FIRMWARE_VERSION = '1.6.1';
+const FIRMWARE_VERSION = '1.6.2';
 const ADMIN_PASSWORD = 'Acoustas2026!';  // Change this to your desired password
 const BAUD_RATE = 921600;
 
