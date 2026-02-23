@@ -391,6 +391,14 @@ body {
   color: var(--text-muted);
 }
 
+.version-select {
+  width: auto;
+  min-width: 200px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;

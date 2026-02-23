@@ -26,13 +26,20 @@ const FLASH_OFFSETS = {
     firmware: 0x80000,
 };
 
-// Firmware binary paths:
-const FIRMWARE_FILES = {
-    bootloader: 'firmware/bootloader.bin',
-    partitionTable: 'firmware/partition-table.bin',
-    otaData: 'firmware/ota_data_initial.bin',
-    firmware: 'firmware/AC650.bin',
-};
+// Firmware binary paths (resolved dynamically for version selection):
+function getFirmwareFiles() {
+    const versionSelect = document.getElementById('versionSelect');
+    const selectedVersion = versionSelect ? versionSelect.value : 'latest';
+    const firmwarePath = selectedVersion === 'latest'
+        ? 'firmware/AC650.bin'
+        : `firmware/${selectedVersion}/AC650.bin`;
+    return {
+        bootloader: 'firmware/bootloader.bin',
+        partitionTable: 'firmware/partition-table.bin',
+        otaData: 'firmware/ota_data_initial.bin',
+        firmware: firmwarePath,
+    };
+}
 
 // ─── State ───────────────────────────────────────────────────────
 let selectedConfig = null;
@@ -56,6 +63,8 @@ const adminCancel = document.getElementById('adminCancel');
 const adminError = document.getElementById('adminError');
 const serialSection = document.getElementById('serialSection');
 const serialInput = document.getElementById('serialInput');
+const versionSelectRow = document.getElementById('versionSelectRow');
+const versionSelect = document.getElementById('versionSelect');
 const connectionStatus = document.getElementById('connectionStatus');
 const statusDot = connectionStatus.querySelector('.status-dot');
 const statusText = connectionStatus.querySelector('.status-text');
@@ -125,6 +134,7 @@ adminToggle.addEventListener('click', () => {
         adminToggle.classList.remove('active');
         serialSection.classList.add('hidden');
         flashSerialRow.classList.add('hidden');
+        versionSelectRow.classList.add('hidden');
         log('Admin mode disabled');
         updateUI();
         return;
@@ -154,6 +164,7 @@ function tryAdminLogin() {
         isAdmin = true;
         adminToggle.classList.add('active');
         serialSection.classList.remove('hidden');
+        versionSelectRow.classList.remove('hidden');
         adminModal.classList.add('hidden');
         log('Admin mode enabled');
         updateUI();
@@ -249,11 +260,13 @@ flashBtn.addEventListener('click', async () => {
         if (fullErase) {
             // Full erase mode: load all binaries
             log('Mode: FULL ERASE - all settings will be reset');
+            const fwFiles = getFirmwareFiles();
+            log(`Firmware path: ${fwFiles.firmware}`);
             const [bootloaderData, partTableData, otaDataData, firmwareData] = await Promise.all([
-                fetchBinary(FIRMWARE_FILES.bootloader),
-                fetchBinary(FIRMWARE_FILES.partitionTable),
-                fetchBinary(FIRMWARE_FILES.otaData),
-                fetchBinary(FIRMWARE_FILES.firmware),
+                fetchBinary(fwFiles.bootloader),
+                fetchBinary(fwFiles.partitionTable),
+                fetchBinary(fwFiles.otaData),
+                fetchBinary(fwFiles.firmware),
             ]);
 
             log(`Loaded: bootloader=${bootloaderData.length}B, partTable=${partTableData.length}B, otaData=${otaDataData.length}B, firmware=${firmwareData.length}B`);
@@ -310,11 +323,13 @@ flashBtn.addEventListener('click', async () => {
             // Targeted mode: write all partitions WITHOUT erasing full flash
             // This preserves NVS (Wi-Fi credentials, provisioning data)
             log('Mode: TARGETED UPDATE - preserving Wi-Fi and provisioning data');
+            const fwFiles = getFirmwareFiles();
+            log(`Firmware path: ${fwFiles.firmware}`);
             const [bootloaderData, partTableData, otaDataData, firmwareData] = await Promise.all([
-                fetchBinary(FIRMWARE_FILES.bootloader),
-                fetchBinary(FIRMWARE_FILES.partitionTable),
-                fetchBinary(FIRMWARE_FILES.otaData),
-                fetchBinary(FIRMWARE_FILES.firmware),
+                fetchBinary(fwFiles.bootloader),
+                fetchBinary(fwFiles.partitionTable),
+                fetchBinary(fwFiles.otaData),
+                fetchBinary(fwFiles.firmware),
             ]);
 
             log(`Loaded: bootloader=${bootloaderData.length}B, partTable=${partTableData.length}B, otaData=${otaDataData.length}B, firmware=${firmwareData.length}B`);
