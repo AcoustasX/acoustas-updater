@@ -262,7 +262,7 @@ flashBtn.addEventListener('click', async () => {
             log('Mode: FULL ERASE - all settings will be reset');
             const fwFiles = getFirmwareFiles();
             log(`Firmware path: ${fwFiles.firmware}`);
-            const [bootloaderData, partTableData, otaDataData, firmwareData] = await Promise.all([
+            let [bootloaderData, partTableData, otaDataData, firmwareData] = await Promise.all([
                 fetchBinary(fwFiles.bootloader),
                 fetchBinary(fwFiles.partitionTable),
                 fetchBinary(fwFiles.otaData),
@@ -270,6 +270,11 @@ flashBtn.addEventListener('click', async () => {
             ]);
 
             log(`Loaded: bootloader=${bootloaderData.length}B, partTable=${partTableData.length}B, otaData=${otaDataData.length}B, firmware=${firmwareData.length}B`);
+
+            // Strip OTA metadata wrapper if present (firmware must start with 0xE9)
+            firmwareData = stripOtaWrapper(firmwareData);
+            log(`Firmware after OTA strip: ${firmwareData.length}B`);
+
             setProgress(10, 'Preparing storage partition...');
 
             // Generate storage partition
@@ -325,7 +330,7 @@ flashBtn.addEventListener('click', async () => {
             log('Mode: TARGETED UPDATE - preserving Wi-Fi and provisioning data');
             const fwFiles = getFirmwareFiles();
             log(`Firmware path: ${fwFiles.firmware}`);
-            const [bootloaderData, partTableData, otaDataData, firmwareData] = await Promise.all([
+            let [bootloaderData, partTableData, otaDataData, firmwareData] = await Promise.all([
                 fetchBinary(fwFiles.bootloader),
                 fetchBinary(fwFiles.partitionTable),
                 fetchBinary(fwFiles.otaData),
@@ -333,6 +338,11 @@ flashBtn.addEventListener('click', async () => {
             ]);
 
             log(`Loaded: bootloader=${bootloaderData.length}B, partTable=${partTableData.length}B, otaData=${otaDataData.length}B, firmware=${firmwareData.length}B`);
+
+            // Strip OTA metadata wrapper if present (firmware must start with 0xE9)
+            firmwareData = stripOtaWrapper(firmwareData);
+            log(`Firmware after OTA strip: ${firmwareData.length}B`);
+
             setProgress(10, 'Preparing storage partition...');
 
             // Generate storage partition
@@ -464,6 +474,45 @@ async function fetchBinary(path) {
     if (!response.ok) throw new Error(`Failed to load ${path}: ${response.status}`);
     const buffer = await response.arrayBuffer();
     return new Uint8Array(buffer);
+}
+
+/**
+ * Strips the OTA metadata wrapper from a firmware binary if present.
+ *
+ * OTA-packaged files have the format:
+ *   [4 bytes: firmware_len (LE uint32)]
+ *   [4 bytes: signature_len (LE uint32)]
+ *   [firmware_len bytes: raw firmware]
+ *   [signature_len bytes: ECDSA signature]
+ *
+ * Raw ESP32 firmware starts with magic byte 0xE9 at offset 0.
+ * OTA-wrapped firmware has 0xE9 at offset 8.
+ *
+ * This function detects the wrapper and strips it, returning only the
+ * raw firmware binary that the ESP32 bootloader can execute.
+ */
+function stripOtaWrapper(data) {
+    // Check if the first byte is already the ESP32 magic byte
+    if (data[0] === 0xE9) {
+        log('Firmware is raw binary (starts with 0xE9) — no stripping needed');
+        return data;
+    }
+
+    // Check if byte 8 is the ESP32 magic byte (OTA wrapper present)
+    if (data.length > 8 && data[8] === 0xE9) {
+        const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+        const firmwareLen = view.getUint32(0, true); // little-endian
+        const signatureLen = view.getUint32(4, true); // little-endian
+        const expectedTotal = 8 + firmwareLen + signatureLen;
+
+        if (expectedTotal === data.length && firmwareLen > 0 && signatureLen > 0 && signatureLen < 256) {
+            log(`Detected OTA wrapper: firmware=${firmwareLen}B, signature=${signatureLen}B — stripping to raw binary`);
+            return data.slice(8, 8 + firmwareLen);
+        }
+    }
+
+    log('⚠ Firmware format not recognized — using as-is');
+    return data;
 }
 
 function generateStoragePartition(serial, config) {
