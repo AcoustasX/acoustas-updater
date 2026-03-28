@@ -49,6 +49,7 @@ let espTool = null;
 let transport = null;
 let isConnected = false;
 
+
 // ─── DOM Elements ────────────────────────────────────────────────
 const ampCards = document.querySelectorAll('.amp-card');
 const connectBtn = document.getElementById('connectBtn');
@@ -88,6 +89,21 @@ const logOutput = document.getElementById('logOutput');
 const logToggle = document.getElementById('logToggle');
 const logClose = document.getElementById('logClose');
 
+// Restore amp selection from session
+(function restoreSelection() {
+    const saved = sessionStorage.getItem('selectedConfig');
+    const savedName = sessionStorage.getItem('selectedName');
+    if (saved !== null) {
+        selectedConfig = parseInt(saved, 10);
+        selectedName = savedName || '';
+        ampCards.forEach(c => {
+            if (parseInt(c.dataset.config, 10) === selectedConfig) {
+                c.classList.add('selected');
+            }
+        });
+    }
+})();
+
 // ─── Logging ─────────────────────────────────────────────────────
 function log(msg) {
     const time = new Date().toLocaleTimeString();
@@ -122,6 +138,8 @@ ampCards.forEach(card => {
         card.classList.add('selected');
         selectedConfig = parseInt(card.dataset.config, 10);
         selectedName = card.dataset.name;
+        sessionStorage.setItem('selectedConfig', selectedConfig);
+        sessionStorage.setItem('selectedName', selectedName);
         log(`Selected: ${selectedName} (config=${selectedConfig})`);
         updateUI();
     });
@@ -447,6 +465,8 @@ retryBtn.addEventListener('click', resetAll);
 function resetAll() {
     selectedConfig = null;
     selectedName = '';
+    sessionStorage.removeItem('selectedConfig');
+    sessionStorage.removeItem('selectedName');
     ampCards.forEach(c => c.classList.remove('selected'));
     flashContent.classList.remove('hidden');
     progressSection.classList.add('hidden');
