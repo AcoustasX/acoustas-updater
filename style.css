@@ -8,12 +8,12 @@
   --bg-secondary: #141414;
   --bg-card: #1c1c1e;
   --bg-card-hover: #252528;
-  --bg-card-selected: #1a2a1a;
+  --bg-card-selected: #142322;
   --border-card: #2a2a2c;
-  --border-selected: #65c366;
-  --brand: #65c366;
-  --brand-glow: rgba(101, 195, 102, 0.25);
-  --brand-dark: #3a7a3b;
+  --border-selected: #4FC2B8;
+  --brand: #4FC2B8;
+  --brand-glow: rgba(79, 194, 184, 0.31);
+  --brand-dark: #1F5851;
   --accent: #1386ff;
   --accent-hover: #0f6fdd;
   --text-primary: #f7f7f7;
@@ -21,7 +21,7 @@
   --text-muted: #797979;
   --danger: #bf8f00;
   --danger-bg: rgba(191, 143, 0, 0.1);
-  --success: #76ff03;
+  --success: #7CDFD4;
   --error: #ff4444;
   --radius: 12px;
   --radius-sm: 8px;
@@ -435,7 +435,7 @@ body {
 }
 
 .btn-accent:hover:not(:disabled) {
-  background: #7dd87e;
+  background: #7CDFD4;
 }
 
 .btn-secondary {
@@ -477,7 +477,7 @@ body {
 
 .status-dot.connected {
   background: var(--success);
-  box-shadow: 0 0 8px rgba(118, 255, 3, 0.5);
+  box-shadow: 0 0 8px rgba(124, 223, 212, 0.5);
 }
 
 .status-text {
